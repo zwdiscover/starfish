@@ -4,9 +4,10 @@ TileSet.
 """
 import numpy as np
 
+from starfish.core.experiment.builder.test.factories.unique_tiles import unique_data
 from starfish.core.types import Axes
 from .factories.unique_tiles import (
-    unique_data, unique_tiles_imagestack, X_COORDS, Y_COORDS, Z_COORDS,
+    unique_tiles_imagestack, X_COORDS, Y_COORDS, Z_COORDS,
 )
 from .imagestack_test_utils import (
     recalculate_physical_coordinate_range,
@@ -17,6 +18,7 @@ from ..imagestack import ImageStack
 from ..parser.crop import CropParameters
 
 
+NUM_FOV = 1
 NUM_ROUND = 3
 NUM_CH = 4
 NUM_ZPLANE = 2
@@ -28,8 +30,12 @@ HEIGHT = 40
 WIDTH = 60
 
 
-def expected_data(round_: int, ch: int, zplane: int):
-    return unique_data(round_, ch, zplane, NUM_ROUND, NUM_CH, NUM_ZPLANE, HEIGHT, WIDTH)
+def expected_data(round_label: int, ch_label: int, zplane_label: int):
+    return unique_data(
+        0, round_label, ch_label, zplane_label,
+        NUM_FOV, NUM_ROUND, NUM_CH, NUM_ZPLANE,
+        HEIGHT, WIDTH
+    )
 
 
 def setup_imagestack(crop_parameters: CropParameters) -> ImageStack:
@@ -56,25 +62,25 @@ def test_crop_rcz():
 
     expected_zplane_coordinates = np.linspace(Z_COORDS[0], Z_COORDS[1], NUM_ZPLANE)
 
-    for zplane in stack.axis_labels(Axes.ZPLANE):
-        for round_ in stack.axis_labels(Axes.ROUND):
-            for ch in stack.axis_labels(Axes.CH):
-                expected_tile_data = expected_data(round_, ch, zplane)
+    for zplane_label in stack.axis_labels(Axes.ZPLANE):
+        for round_label in stack.axis_labels(Axes.ROUND):
+            for ch_label in stack.axis_labels(Axes.CH):
+                expected_tile_data = expected_data(round_label, ch_label, zplane_label)
 
                 verify_stack_data(
                     stack,
-                    {Axes.ROUND: round_, Axes.CH: ch, Axes.ZPLANE: zplane},
+                    {Axes.ROUND: round_label, Axes.CH: ch_label, Axes.ZPLANE: zplane_label},
                     expected_tile_data,
                 )
 
-        zplane_index = ZPLANE_LABELS.index(zplane)
+        zplane_index = ZPLANE_LABELS.index(zplane_label)
         expected_zplane_coordinate = expected_zplane_coordinates[zplane_index]
         verify_physical_coordinates(
             stack,
             X_COORDS,
             Y_COORDS,
             expected_zplane_coordinate,
-            zplane,
+            zplane_label,
         )
 
 
